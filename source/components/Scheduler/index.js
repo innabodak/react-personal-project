@@ -22,6 +22,10 @@ export default class Scheduler extends Component {
         isTaskFetching: false,
     };
 
+    componentDidMount () {
+        this._fetchTasks();
+    }
+
     _setTaskFetchingState = (state) => {
         this.setState({
             isTaskFetching: state,
@@ -48,7 +52,17 @@ export default class Scheduler extends Component {
         }
     };
 
-    _createTask = () => {
+    _fetchTasks = async () => {
+        this._setTaskFetchingState(true);
+        const tasks = await api.fetchTasks();
+
+        this.setState({
+            tasks,
+            isTaskFetching: false,
+        });
+    };
+
+    _createTask = async () => {
         const { newTaskMessage } = this.state;
 
         if (!newTaskMessage) {
@@ -56,7 +70,8 @@ export default class Scheduler extends Component {
         }
         this._setTaskFetchingState(true);
 
-        const newTask = { ...new BaseTaskModel(), message: newTaskMessage };
+        // const newTask = { ...new BaseTaskModel(), message: newTaskMessage };
+        const newTask = await api.createTask(newTaskMessage);
 
         this.setState(({ tasks }) => ({
             tasks:          [newTask, ...tasks],
@@ -65,35 +80,53 @@ export default class Scheduler extends Component {
         }));
     };
 
-    _removeTask = (id) => {
+    _removeTask = async (id) => {
         this._setTaskFetchingState(true);
+        await api.removeTask(id);
         this.setState(({ tasks }) => ({
             tasks:          tasks.filter((task) => task.id !== id),
             isTaskFetching: false,
         }));
     };
 
-    _updateTask = (taskToUpdate) => {
+    _updateTask = async (taskToUpdate) => {
         this._setTaskFetchingState(true);
+
+        const updatedTask = await api.updateTask(taskToUpdate);
 
         this.setState(({ tasks }) => ({
             tasks: tasks.map((task) =>
-                task.id === taskToUpdate.id ? taskToUpdate : task
+                // task.id === taskToUpdate.id ? taskToUpdate : task
+                task.id === updatedTask.id ? updatedTask : task
             ),
             isTaskFetching: false,
         }));
     };
 
-    _completeAll = () => {
-        this._setTaskFetchingState(true);
-        this.setState(({ tasks }) => ({
-            tasks: tasks.map((task) => {
-                task.completed = true;
+    _completeAll = async () => {
+        const { tasks } = this.state;
+        const tasksToComplete = tasks.filter((task) => {
+            return task.completed === false ? task.completed = true : null;
+        });
 
-                return task;
-            }),
-            isTaskFetching: false,
-        }));
+        console.log(tasksToComplete);
+
+        if (tasksToComplete.length !== 0) {
+            this._setTaskFetchingState(true);
+
+            const completedTasks = await api.completeAllTask(tasksToComplete);
+
+            console.log(completedTasks);
+
+            this.setState(({ tasks }) => ({
+                tasks: tasks.map((task) => {
+                    task.completed = true;
+
+                    return task;
+                }),
+                isTaskFetching: false,
+            }));
+        }
     };
 
     _isAllCompleted = () => {
