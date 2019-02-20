@@ -60,12 +60,6 @@ export const api = {
     },
 
     async completeAllTasks (tasksToComplete) {
-        const completedTasks = await Promise.all(
-            tasksToComplete.map((task) => this.updateTask(task))
-        ).then((resolve) => {
-            return resolve;
-        });
-
-        return completedTasks;
+        await Promise.all(tasksToComplete.map((task) => this.updateTask(task)));
     },
 };

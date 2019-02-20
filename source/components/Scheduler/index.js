@@ -22,10 +22,10 @@ export default class Scheduler extends Component {
     };
 
     componentDidMount () {
-        this._fetchTasks();
+        this._fetchTasksAsync();
     }
 
-    _setTaskFetchingState = (state) => {
+    _setTasksFetchingState = (state) => {
         this.setState({
             isTasksFetching: state,
         });
@@ -37,59 +37,48 @@ export default class Scheduler extends Component {
         });
     };
 
-    _handleFormSubmit = () => {
-        event.preventDefault();
-        this._createTaskAsync();
-    };
-
-    _submitOnEnter = () => {
-        const enterKey = event.key === 'Enter';
-
-        if (enterKey) {
-            event.preventDefault();
-            this._createTaskAsync();
-        }
-    };
-
-    _fetchTasks = async () => {
-        this._setTaskFetchingState(true);
+    _fetchTasksAsync = async () => {
+        this._setTasksFetchingState(true);
         const tasks = await api.fetchTasks();
 
         this.setState({
             tasks,
-            isTasksFetching: false,
         });
+
+        this._setTasksFetchingState(false);
     };
 
-    _createTaskAsync = async () => {
+    _createTaskAsync = async (event) => {
+        event.preventDefault();
         const { newTaskMessage } = this.state;
 
         if (!newTaskMessage) {
             return null;
         }
-        this._setTaskFetchingState(true);
+        this._setTasksFetchingState(true);
 
-        // const newTask = { ...new BaseTaskModel(), message: newTaskMessage };
         const newTask = await api.createTask(newTaskMessage);
 
         this.setState(({ tasks }) => ({
-            tasks:           [newTask, ...tasks],
-            newTaskMessage:  '',
-            isTasksFetching: false,
+            tasks:          [newTask, ...tasks],
+            newTaskMessage: '',
         }));
+
+        this._setTasksFetchingState(false);
     };
 
     _removeTaskAsync = async (id) => {
-        this._setTaskFetchingState(true);
+        this._setTasksFetchingState(true);
         await api.removeTask(id);
         this.setState(({ tasks }) => ({
-            tasks:           tasks.filter((task) => task.id !== id),
-            isTasksFetching: false,
+            tasks: tasks.filter((task) => task.id !== id),
         }));
+
+        this._setTasksFetchingState(false);
     };
 
-    _updateTask = async (taskToUpdate) => {
-        this._setTaskFetchingState(true);
+    _updateTaskAsync = async (taskToUpdate) => {
+        this._setTasksFetchingState(true);
 
         const updatedTask = await api.updateTask(taskToUpdate);
 
@@ -97,18 +86,19 @@ export default class Scheduler extends Component {
             tasks: tasks.map((task) =>
                 task.id === updatedTask.id ? updatedTask : task
             ),
-            isTasksFetching: false,
         }));
+
+        this._setTasksFetchingState(false);
     };
 
-    _completeAll = async () => {
+    _completeAllTasksAsync = async () => {
         const { tasks } = this.state;
         const tasksToComplete = tasks.filter((task) => {
             return task.completed === false ? task.completed = true : null;
         });
 
         if (tasksToComplete.length !== 0) {
-            this._setTaskFetchingState(true);
+            this._setTasksFetchingState(true);
 
             await api.completeAllTasks(tasksToComplete);
 
@@ -118,32 +108,36 @@ export default class Scheduler extends Component {
 
                     return task;
                 }),
-                isTasksFetching: false,
             });
+
+            this._setTasksFetchingState(false);
         }
     };
 
-    _isAllCompleted = () => {
+    _getAllCompleted = () => {
         return this.state.tasks.every((task) => task.completed);
     };
 
-    _onSearch = (event) => {
+    _updateTaskAsyncsFilter = (event) => {
         this.setState({
-            tasksFilter: event.target.value,
+            tasksFilter: event.target.value.toLowerCase(),
         });
     };
 
-    _search = (tasks, tasksFilter) => {
-        if (tasksFilter === '') {
-            return tasks;
+    _search = () => {
+        const { tasks, tasksFilter } = this.state;
+
+        if (tasksFilter) {
+            return tasks.filter((task) => {
+                return (
+                    task.message
+                        .toLowerCase()
+                        .indexOf(tasksFilter.toLowerCase()) > -1
+                );
+            });
         }
 
-        return tasks.filter((task) => {
-            return (
-                task.message.toLowerCase().indexOf(tasksFilter.toLowerCase()) >
-                -1
-            );
-        });
+        return tasks;
     };
 
     render () {
@@ -153,9 +147,9 @@ export default class Scheduler extends Component {
             tasksFilter,
             isTasksFetching,
         } = this.state;
-        const isAllCompleted = tasks.length ? this._isAllCompleted() : false;
+        const isAllCompleted = tasks.length ? this._getAllCompleted() : false;
 
-        const tasksToShow = sortTasksByGroup(this._search(tasks, tasksFilter));
+        const tasksToShow = sortTasksByGroup(this._search());
 
         //console.log(this.state);
         const taskJSX = tasksToShow.map((task) => {
@@ -163,7 +157,7 @@ export default class Scheduler extends Component {
                 <Catcher key = { task.id }>
                     <Task
                         _removeTaskAsync = { this._removeTaskAsync }
-                        _updateTask = { this._updateTask }
+                        _updateTaskAsync = { this._updateTaskAsync }
                         { ...task }
                     />
                 </Catcher>
@@ -180,18 +174,17 @@ export default class Scheduler extends Component {
                             placeholder = 'Поиск'
                             type = 'search'
                             value = { tasksFilter }
-                            onChange = { this._onSearch }
+                            onChange = { this._updateTaskAsyncsFilter }
                         />
                     </header>
                     <section>
-                        <form onSubmit = { this._handleFormSubmit }>
+                        <form onSubmit = { this._createTaskAsync }>
                             <input
                                 maxLength = { 50 }
                                 placeholder = 'Описaние моей новой задачи'
                                 type = 'text'
                                 value = { newTaskMessage }
                                 onChange = { this._updateNewTaskMessage }
-                                onKeyPress = { this._submitOnEnter }
                             />
                             <button type = 'submit'>Добавить задачу</button>
                         </form>
@@ -207,7 +200,7 @@ export default class Scheduler extends Component {
                             checked = { isAllCompleted }
                             color1 = '#363636'
                             color2 = '#fff'
-                            onClick = { this._completeAll }
+                            onClick = { this._completeAllTasksAsync }
                         />
                         <span className = { Styles.completeAllTasks }>
                             Все задачи выполнены
