@@ -11,8 +11,8 @@ export const api = {
 
         const { data: tasks } = await response.json();
 
-        console.log(response);
-        console.log(tasks);
+        // console.log(response);
+        // console.log(tasks);
 
         return tasks;
     },
@@ -56,18 +56,13 @@ export const api = {
             data: [updatedTask],
         } = await response.json();
 
-        console.log(taskToUpdate);
-        console.log(updatedTask);
-
         return updatedTask;
     },
 
-    async completeAllTask (tasksToComplete) {
+    async completeAllTasks (tasksToComplete) {
         const completedTasks = await Promise.all(
             tasksToComplete.map((task) => this.updateTask(task))
         ).then((resolve) => {
-            console.log(resolve);
-
             return resolve;
         });
 

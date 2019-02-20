@@ -14,7 +14,7 @@ import Styles from './styles.m.css';
 
 export default class Task extends PureComponent {
     static propTypes = {
-        _removeTask: func.isRequired,
+        _removeTaskAsync: func.isRequired,
         _updateTask: func.isRequired,
         completed:   bool.isRequired,
         favorite:    bool.isRequired,
@@ -61,32 +61,23 @@ export default class Task extends PureComponent {
         );
     };
 
-    _removeTask = () => {
-        const { id, _removeTask } = this.props;
+    _removeTaskAsync = () => {
+        const { id, _removeTaskAsync } = this.props;
 
-        return _removeTask(id);
+        return _removeTaskAsync(id);
     };
 
     _editTask = () => {
-        // console.log('jj');
-        // const { _updateTask, message } = this.props;
+        const { isEditing } = this.state;
 
-        this.setState({
-            isEditing: true,
-        });
-
+        this.taskInp.current.disabled = isEditing;
         this.taskInp.current.focus();
-
-        // _updateTask(
-        //     this._getTaskShape({
-        //         message: newMessage,
-        //     })
-        // );
+        this.setState({
+            isEditing: !isEditing,
+        });
     };
 
     _updateEditedMessage = (event) => {
-        //const { _updateTask, message } = this.props;
-
         this.setState({
             message: event.target.value,
         });
@@ -100,7 +91,6 @@ export default class Task extends PureComponent {
 
         switch (true) {
             case !editedMessage:
-                //return null;
                 break;
             case enterKey:
                 _updateTask(
@@ -113,13 +103,13 @@ export default class Task extends PureComponent {
                 });
                 break;
             case escKey:
+                event.target.value = message;
                 this.setState({
                     message,
                     isEditing: false,
                 });
                 break;
             default:
-                //return null;
                 break;
         }
     };
@@ -136,12 +126,9 @@ export default class Task extends PureComponent {
         const task = this._getTaskShape({ ...this.props });
         const setTaskStyles = this._setTaskStyles();
         const { isEditing, message } = this.state;
-
         // console.log(this.props);
-
         const actionsStroke = '#000';
         const actionsFill = '#3B8EF3';
-        // const actionsTEST = 'red';
 
         return (
             <li className = { setTaskStyles }>
@@ -155,7 +142,6 @@ export default class Task extends PureComponent {
                     />
                     <input
                         disabled = { !isEditing }
-                        // disabled
                         maxLength = { 50 }
                         ref = { this.taskInp }
                         type = 'text'
@@ -171,7 +157,6 @@ export default class Task extends PureComponent {
                         className = { Styles.toggleTaskFavoriteState }
                         color1 = { actionsFill }
                         color2 = { actionsStroke }
-                        // color3 = { actionsTEST }
                         onClick = { this._markFavorite }
                     />
                     <Edit
@@ -186,7 +171,7 @@ export default class Task extends PureComponent {
                         inlineBlock
                         color1 = { actionsFill }
                         color2 = { actionsStroke }
-                        onClick = { this._removeTask }
+                        onClick = { this._removeTaskAsync }
                     />
                 </div>
             </li>
