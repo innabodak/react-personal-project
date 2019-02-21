@@ -21,7 +21,7 @@ export default class Task extends PureComponent {
         favorite:         bool.isRequired,
         id:               string.isRequired,
         message:          string.isRequired,
-        modified:         string.isRequired,
+        modified:         string,
     };
 
     state = {
