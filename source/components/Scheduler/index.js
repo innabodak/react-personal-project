@@ -111,6 +111,8 @@ export default class Scheduler extends Component {
             });
 
             this._setTasksFetchingState(false);
+        } else {
+            return null;
         }
     };
 
@@ -118,7 +120,7 @@ export default class Scheduler extends Component {
         return this.state.tasks.every((task) => task.completed);
     };
 
-    _updateTaskAsyncsFilter = (event) => {
+    _updateTasksFilter = (event) => {
         this.setState({
             tasksFilter: event.target.value.toLowerCase(),
         });
@@ -174,7 +176,7 @@ export default class Scheduler extends Component {
                             placeholder = 'Поиск'
                             type = 'search'
                             value = { tasksFilter }
-                            onChange = { this._updateTaskAsyncsFilter }
+                            onChange = { this._updateTasksFilter }
                         />
                     </header>
                     <section>
@@ -199,7 +201,7 @@ export default class Scheduler extends Component {
                             inlineBlock
                             checked = { isAllCompleted }
                             color1 = '#363636'
-                            color2 = '#fff'
+                            color2 = '#FFF'
                             onClick = { this._completeAllTasksAsync }
                         />
                         <span className = { Styles.completeAllTasks }>
