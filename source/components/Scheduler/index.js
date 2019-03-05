@@ -11,7 +11,7 @@ import Catcher from '../Catcher';
 // Instruments
 import Styles from './styles.m.css';
 import { api } from '../../REST'; // ! Импорт модуля API должен иметь именно такой вид (import { api } from '../../REST')
-import { sortTasksByGroup, BaseTaskModel } from '../../instruments/helpers';
+import { sortTasksByGroup } from '../../instruments/helpers';
 
 export default class Scheduler extends Component {
     state = {
@@ -153,7 +153,6 @@ export default class Scheduler extends Component {
 
         const tasksToShow = sortTasksByGroup(this._search());
 
-        //console.log(this.state);
         const taskJSX = tasksToShow.map((task) => {
             return (
                 <Catcher key = { task.id }>
