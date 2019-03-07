@@ -129,18 +129,14 @@ export default class Task extends PureComponent {
         const enterKey = event.key === 'Enter';
         const escKey = event.key === 'Escape';
 
-        switch (true) {
-            case !newMessage:
-                return null;
-                break;
-            case newMessage && enterKey:
-                this._updateTask();
-                break;
-            case newMessage && escKey:
-                this._cancelUpdatingTaskMessage();
-                break;
-            default:
-                break;
+        if (!newMessage) {
+            return null;
+        }
+        if (enterKey) {
+            this._updateTask();
+        }
+        if (escKey) {
+            this._cancelUpdatingTaskMessage();
         }
     };
 

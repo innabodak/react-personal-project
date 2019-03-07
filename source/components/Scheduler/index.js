@@ -38,79 +38,100 @@ export default class Scheduler extends Component {
     };
 
     _fetchTasksAsync = async () => {
-        this._setTasksFetchingState(true);
-        const tasks = await api.fetchTasks();
+        try {
+            this._setTasksFetchingState(true);
+            const tasks = await api.fetchTasks();
 
-        this.setState({
-            tasks,
-        });
-
-        this._setTasksFetchingState(false);
+            this.setState({
+                tasks,
+            });
+        } catch ({ message }) {
+            console.log(message);
+        } finally {
+            this._setTasksFetchingState(false);
+        }
     };
 
     _createTaskAsync = async (event) => {
         event.preventDefault();
         const { newTaskMessage } = this.state;
 
-        if (!newTaskMessage) {
+        if (newTaskMessage) {
+            try {
+                this._setTasksFetchingState(true);
+
+                const newTask = await api.createTask(newTaskMessage);
+
+                this.setState(({ tasks }) => ({
+                    tasks:          [newTask, ...tasks],
+                    newTaskMessage: '',
+                }));
+            } catch ({ message }) {
+                console.log(message);
+            } finally {
+                this._setTasksFetchingState(false);
+            }
+        } else {
             return null;
         }
-        this._setTasksFetchingState(true);
-
-        const newTask = await api.createTask(newTaskMessage);
-
-        this.setState(({ tasks }) => ({
-            tasks:          [newTask, ...tasks],
-            newTaskMessage: '',
-        }));
-
-        this._setTasksFetchingState(false);
     };
 
     _removeTaskAsync = async (id) => {
-        this._setTasksFetchingState(true);
-        await api.removeTask(id);
-        this.setState(({ tasks }) => ({
-            tasks: tasks.filter((task) => task.id !== id),
-        }));
-
-        this._setTasksFetchingState(false);
+        try {
+            this._setTasksFetchingState(true);
+            await api.removeTask(id);
+            this.setState(({ tasks }) => ({
+                tasks: tasks.filter((task) => task.id !== id),
+            }));
+        } catch ({ message }) {
+            console.log(message);
+        } finally {
+            this._setTasksFetchingState(false);
+        }
     };
 
     _updateTaskAsync = async (taskToUpdate) => {
-        this._setTasksFetchingState(true);
+        try {
+            this._setTasksFetchingState(true);
 
-        const updatedTask = await api.updateTask(taskToUpdate);
+            const updatedTask = await api.updateTask(taskToUpdate);
 
-        this.setState(({ tasks }) => ({
-            tasks: tasks.map((task) =>
-                task.id === updatedTask.id ? updatedTask : task
-            ),
-        }));
-
-        this._setTasksFetchingState(false);
+            this.setState(({ tasks }) => ({
+                tasks: tasks.map((task) =>
+                    task.id === updatedTask.id ? updatedTask : task
+                ),
+            }));
+        } catch ({ message }) {
+            console.log(message);
+        } finally {
+            this._setTasksFetchingState(false);
+        }
     };
 
     _completeAllTasksAsync = async () => {
         const { tasks } = this.state;
-        const tasksToComplete = tasks.filter((task) => {
-            return task.completed === false ? task.completed = true : null;
-        });
+        const tasksToComplete = tasks.filter((task) =>
+            task.completed === false ? task.completed = true : null
+        );
 
         if (tasksToComplete.length !== 0) {
-            this._setTasksFetchingState(true);
+            try {
+                this._setTasksFetchingState(true);
 
-            await api.completeAllTasks(tasksToComplete);
+                await api.completeAllTasks(tasksToComplete);
 
-            this.setState({
-                tasks: tasks.map((task) => {
-                    task.completed = true;
+                this.setState({
+                    tasks: tasks.map((task) => {
+                        task.completed = true;
 
-                    return task;
-                }),
-            });
-
-            this._setTasksFetchingState(false);
+                        return task;
+                    }),
+                });
+            } catch ({ message }) {
+                console.log(message);
+            } finally {
+                this._setTasksFetchingState(false);
+            }
         } else {
             return null;
         }

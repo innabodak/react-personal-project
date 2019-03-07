@@ -9,12 +9,13 @@ export const api = {
             },
         });
 
-        const { data: tasks } = await response.json();
+        if (response.status !== 200) {
+            throw new Error('API data error');
+        } else {
+            const { data: tasks } = await response.json();
 
-        // console.log(response);
-        // console.log(tasks);
-
-        return tasks;
+            return tasks;
+        }
     },
 
     async createTask (message) {
@@ -27,19 +28,26 @@ export const api = {
             body: JSON.stringify({ message }),
         });
 
-        const { data: tasks } = await response.json();
+        if (response.status !== 200) {
+            throw new Error('API data error');
+        } else {
+            const { data: tasks } = await response.json();
 
-        return tasks;
+            return tasks;
+        }
     },
 
     async removeTask (id) {
-        console.log(`${MAIN_URL}/${id}`);
-        await fetch(`${MAIN_URL}/${id}`, {
+        const response = await fetch(`${MAIN_URL}/${id}`, {
             method:  'DELETE',
             headers: {
                 Authorization: TOKEN,
             },
         });
+
+        if (response.status !== 204) {
+            throw new Error('API data error');
+        }
     },
 
     async updateTask (taskToUpdate) {
@@ -52,14 +60,24 @@ export const api = {
             body: JSON.stringify([taskToUpdate]),
         });
 
-        const {
-            data: [updatedTask],
-        } = await response.json();
+        if (response.status !== 200) {
+            throw new Error('API data error');
+        } else {
+            const {
+                data: [updatedTask],
+            } = await response.json();
 
-        return updatedTask;
+            return updatedTask;
+        }
     },
 
     async completeAllTasks (tasksToComplete) {
-        await Promise.all(tasksToComplete.map((task) => this.updateTask(task)));
+        const response = await Promise.all(
+            tasksToComplete.map((task) => this.updateTask(task))
+        );
+
+        if (response.status !== 200) {
+            throw new Error('API data error');
+        }
     },
 };
